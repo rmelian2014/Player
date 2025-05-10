@@ -64,7 +64,7 @@ public protocol PlayerDelegate: AnyObject {
     func playerBufferTimeDidChange(_ bufferTime: Double)
 
     func player(_ player: Player, didFailWithError error: Error?)
-    func snapshotTaken(image: UIImage?, error: Error?)
+    func snapshotTaken(image: UIImage?, error: Error?, time: CMTime)
 }
 
 
@@ -676,7 +676,7 @@ extension Player {
             let playerItem = AVPlayerItem(asset:asset)
             if let validSnapshotTime = self.snapshotTime {
                 self.takeSnapshot(time: validSnapshotTime, playerAsset: playerItem.asset) { [weak self] image, error in
-                    self?.playerDelegate?.snapshotTaken(image: image, error: error)
+                    self?.playerDelegate?.snapshotTaken(image: image, error: error, time: validSnapshotTime)
                 }
             }
             self.setupPlayerItem(playerItem)
