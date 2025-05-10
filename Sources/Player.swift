@@ -570,8 +570,8 @@ extension Player {
     /// Captures a snapshot of the current Player asset.
     ///
     /// - Parameter completionHandler: Returns a UIImage of the requested video frame. (Great for thumbnails!)
-    public func takeSnapshot(time: CMTime?, completionHandler: ((_ image: UIImage?, _ error: Error?) -> Void)?) {
-        guard let asset = self._playerItem?.asset else {
+    public func takeSnapshot(time: CMTime?, playerAsset: AVAsset?, completionHandler: ((_ image: UIImage?, _ error: Error?) -> Void)?) {
+        guard let asset = playerAsset ?? self._playerItem?.asset else {
             DispatchQueue.main.async {
                 completionHandler?(nil, nil)
             }
@@ -675,7 +675,7 @@ extension Player {
 
             let playerItem = AVPlayerItem(asset:asset)
             if let validSnapshotTime = self.snapshotTime {
-                self.takeSnapshot(time: validSnapshotTime) { [weak self] image, error in
+                self.takeSnapshot(time: validSnapshotTime, playerAsset: playerItem.asset) { [weak self] image, error in
                     self?.playerDelegate?.snapshotTaken(image: image, error: error)
                 }
             }
