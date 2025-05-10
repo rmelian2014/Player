@@ -37,12 +37,15 @@ public let PlayerErrorDomain = "PlayerErrorDomain"
 /// Error types.
 public enum PlayerError: Error, CustomStringConvertible {
     case failed
+    case thumbnailRetrivingError
 
     public var description: String {
         get {
             switch self {
             case .failed:
                 return "failed"
+            case .thumbnailRetrivingError:
+                return "failed retrieving thumbnail"
             }
         }
     }
@@ -61,6 +64,7 @@ public protocol PlayerDelegate: AnyObject {
     func playerBufferTimeDidChange(_ bufferTime: Double)
 
     func player(_ player: Player, didFailWithError error: Error?)
+    func snapshotTaken(image: UIImage?, error: Error?)
 }
 
 
@@ -171,6 +175,8 @@ open class Player: UIViewController {
 
     /// Determines if the video should autoplay when streaming a URL.
     open var autoplay: Bool = true
+    
+    open var snapshotTime: CMTime?
 
     /// Mutes audio playback when true.
     open var muted: Bool {
@@ -580,7 +586,7 @@ extension Player {
         imageGenerator.generateCGImagesAsynchronously(forTimes: [NSValue(time: currentTime)]) { (requestedTime, image, actualTime, result, error) in
             guard let image = image else {
                 DispatchQueue.main.async {
-                    completionHandler?(nil, error)
+                    completionHandler?(nil, PlayerError.thumbnailRetrivingError)
                 }
                 return
             }
@@ -668,6 +674,11 @@ extension Player {
             }
 
             let playerItem = AVPlayerItem(asset:asset)
+            if let validSnapshotTime = self.snapshotTime {
+                self.takeSnapshot(time: validSnapshotTime) { [weak self] image, error in
+                    self?.playerDelegate?.snapshotTaken(image: image, error: error)
+                }
+            }
             self.setupPlayerItem(playerItem)
         })
     }
